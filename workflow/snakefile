@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import re
+
+RESULTS = config["results"]
+# SRC = "resources"
+
+SAMPLES = config["samples"]
+
+# Get reference of human (if human is involved)
+refHuman = config["hg38Seq"]
+anHuman = config["hg38Gtf"]
+
+# # Get reference of Xeno or Meta organism
+# refXeno = config["XenoSeq"]
+# anXeno = config["XenoGtf"]
+
+
+# Prep output with rule all
+rule all:
+	input:
+		expand(RESULTS+"bam/{sample}.hg.bam", sample=SAMPLES)
+
+# Start mapping with minimap
+rule mapHuman:
+	input:
+		reads = lambda wildcards: config["samples"][wildcards.sample]
+	output:
+		bam = RESULTS+"bam/{sample}.hg.bam"
+	threads:
+		config["threads"]
+	params:
+		ref = refHuman
+	shell:"""
+
+        minimap2 -ax sr {params.ref} {input.reads} | \
+        samtools view -bS - | \
+        samtools sort -@ {threads} -o {output.bam}
+	"""	
