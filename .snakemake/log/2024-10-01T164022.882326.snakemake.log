@@ -1,0 +1,32 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 14
+Rules claiming more threads will be scaled down.
+Job stats:
+job         count
+--------  -------
+all             1
+mapHuman        3
+mapXeno         3
+total           7
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct  1 16:40:23 2024]
+localrule mapHuman:
+    input: /Users/chris/Work/Projects/Collab_Gina/data/Xeno_S4.fq.gz
+    output: /Users/chris/Work/Projects/Collab_Gina/analysis/bam/S4_5h.hg.bam
+    jobid: 3
+    reason: Missing output files: /Users/chris/Work/Projects/Collab_Gina/analysis/bam/S4_5h.hg.bam; Code has changed since last execution
+    wildcards: sample=S4_5h
+    threads: 10
+    resources: tmpdir=/var/folders/k7/3lhzp6md553dtz66wfm1hhxr0000gn/T
+
+RuleException in rule mapHuman in file /Users/chris/Work/Pipelines/MetaTX/workflow/snakefile, line 31:
+AttributeError: 'OutputFiles' object has no attribute 'stat', when formatting the following:
+
+        minimap2 -t {threads} -ax sr -Y {params.ref} {input.reads} |         samtools view -bS - |         samtools sort -@ {threads} -o {output.bam};
+		samtools flagstat {output.bam} -@ {threads} -O {output.stat}
+
+	

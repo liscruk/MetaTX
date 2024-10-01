@@ -1,0 +1,43 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 14
+Rules claiming more threads will be scaled down.
+Job stats:
+job         count
+--------  -------
+all             1
+mapHuman        3
+mapXeno         3
+total           7
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct  1 16:28:11 2024]
+localrule mapXeno:
+    input: /Users/chris/Work/Projects/Collab_Gina/data/Xeno_S3.fq.gz
+    output: /Users/chris/Work/Projects/Collab_Gina/analysis/bam/S3_5h.xn.bam, /Users/chris/Work/Projects/Collab_Gina/analysis/bam/S3_5h.xn.stat.tsv
+    jobid: 5
+    reason: Missing output files: /Users/chris/Work/Projects/Collab_Gina/analysis/bam/S3_5h.xn.bam; Code has changed since last execution
+    wildcards: sample=S3_5h
+    threads: 10
+    resources: tmpdir=/var/folders/k7/3lhzp6md553dtz66wfm1hhxr0000gn/T
+
+Terminating processes on user request, this might take some time.
+[Tue Oct  1 16:28:35 2024]
+Error in rule mapXeno:
+    jobid: 5
+    input: /Users/chris/Work/Projects/Collab_Gina/data/Xeno_S3.fq.gz
+    output: /Users/chris/Work/Projects/Collab_Gina/analysis/bam/S3_5h.xn.bam, /Users/chris/Work/Projects/Collab_Gina/analysis/bam/S3_5h.xn.stat.tsv
+    shell:
+        
+
+        minimap2 -ax sr /Users/chris/Documents/src/mm35/fa/GRCm39.primary_assembly.genome.fa.gz /Users/chris/Work/Projects/Collab_Gina/data/Xeno_S3.fq.gz |         samtools view -bS - |         samtools sort -@ 10 -o /Users/chris/Work/Projects/Collab_Gina/analysis/bam/S3_5h.xn.bam;
+        samtools flagstat /Users/chris/Work/Projects/Collab_Gina/analysis/bam/S3_5h.xn.bam -@ 10 -O /Users/chris/Work/Projects/Collab_Gina/analysis/bam/S3_5h.xn.stat.tsv
+
+	
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+Complete log: .snakemake/log/2024-10-01T162811.506349.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.

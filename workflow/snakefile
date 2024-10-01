@@ -14,14 +14,18 @@ refHuman = config["hg38Seq"]
 anHuman = config["hg38Gtf"]
 
 # # Get reference of Xeno or Meta organism
-# refXeno = config["XenoSeq"]
-# anXeno = config["XenoGtf"]
+refXeno = config["XenoSeq"]
+anXeno = config["XenoGtf"]
+
+
 
 
 # Prep output with rule all
 rule all:
 	input:
-		expand(RESULTS+"bam/{sample}.hg.bam", sample=SAMPLES)
+		expand(RESULTS+"bam/{sample}.hg.stat.tsv", sample=SAMPLES),
+		expand(RESULTS+"bam/{sample}.xn.stat.tsv", sample=SAMPLES)
+
 
 # Start mapping with minimap
 rule mapHuman:
@@ -29,13 +33,48 @@ rule mapHuman:
 		reads = lambda wildcards: config["samples"][wildcards.sample]
 	output:
 		bam = RESULTS+"bam/{sample}.hg.bam"
+
 	threads:
 		config["threads"]
 	params:
 		ref = refHuman
+
+	shell:"""
+        minimap2 -t {threads} -ax sr -Y {params.ref} {input.reads} | \
+        samtools view -bS - | \
+        samtools sort -@ {threads} -o {output.bam};
+	"""	
+
+# Start mapping with minimap
+rule mapXeno:
+	input:
+		reads = lambda wildcards: config["samples"][wildcards.sample]
+	output:
+		bam = RESULTS + "bam/{sample}.xn.bam",
+	threads:
+		config["threads"]
+	params:
+		ref = refXeno
+
 	shell:"""
 
-        minimap2 -ax sr {params.ref} {input.reads} | \
+        minimap2 -t {threads} -ax sr -Y {params.ref} {input.reads} | \
         samtools view -bS - | \
-        samtools sort -@ {threads} -o {output.bam}
-	"""	
+        samtools sort -@ {threads} -o {output.bam};
+
+	"""
+
+# Flagstat Rule (with separate outputs for hg and xn)
+rule flagstat:
+    input:
+        bam = [RESULTS + "bam/{sample}.hg.bam", RESULTS + "bam/{sample}.xn.bam"]
+    output:
+        stat = [RESULTS + "bam/{sample}.hg.stat.tsv", RESULTS + "bam/{sample}.xn.stat.tsv"]
+    shell:"""
+
+        samtools flagstat {input.bam[0]} -@ {threads} > {output.stat[0]};
+        samtools flagstat {input.bam[1]} -@ {threads} > {output.stat[1]};
+
+	"""
+
+

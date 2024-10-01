@@ -1,0 +1,36 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 10
+Rules claiming more threads will be scaled down.
+Job stats:
+job         count
+--------  -------
+all             1
+mapHuman        3
+mapXeno         3
+total           7
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct  1 16:24:40 2024]
+localrule mapHuman:
+    input: /Users/chris/Work/Projects/Collab_Gina/data/Xeno_S2.fq.gz
+    output: /Users/chris/Work/Projects/Collab_Gina/analysis/bam/S2_3h.hg.bam, /Users/chris/Work/Projects/Collab_Gina/analysis/bam/S2_3h.hg.stat.tsv
+    jobid: 1
+    reason: Code has changed since last execution
+    wildcards: sample=S2_3h
+    threads: 10
+    resources: tmpdir=/var/folders/k7/3lhzp6md553dtz66wfm1hhxr0000gn/T
+
+Waiting at most 5 seconds for missing files.
+MissingOutputException in rule mapHuman in file /Users/chris/Work/Pipelines/MetaTX/workflow/snakefile, line 29:
+Job 1  completed successfully, but some output files are missing. Missing files after 5 seconds. This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait:
+/Users/chris/Work/Projects/Collab_Gina/analysis/bam/S2_3h.hg.stat.tsv (missing locally, parent dir contents: S2_3h.xn.bam, S2_3h.hg.bam, S4_5h.xn.bam, S3_5h.hg.bam, S4_5h.hg.bam, S3_5h.xn.bam)
+Removing output files of failed job mapHuman since they might be corrupted:
+/Users/chris/Work/Projects/Collab_Gina/analysis/bam/S2_3h.hg.bam
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: .snakemake/log/2024-10-01T162439.902892.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.
