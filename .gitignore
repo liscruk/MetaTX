@@ -15,3 +15,7 @@ _book
 *.mobi
 *.pdf
 .DS_Store
+*.log
+/.snakemake/metadata
+/.snakemake/metadata
+.snakemake/metadata/L1VzZXJzL2NocmlzL1dvcmsvUHJvamVjdHMvQ29sbGFiX0dpbmEvYW5hbHlzaXMvYmFtL1M0XzVoLmhnLmJhbQ==
