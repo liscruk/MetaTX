@@ -5,40 +5,37 @@ import sys
 import re
 
 RESULTS = config["results"]
-# SRC = "resources"
-
 SAMPLES = config["samples"]
+SPECIES = config["species"]
 
 # Get reference of human (if human is involved)
 refHuman = config["hg38Seq"]
 anHuman = config["hg38Gtf"]
+txHuman = config["hg38Tx"]
 
-# # Get reference of Xeno or Meta organism
+# Get reference of Xeno or Meta organism
 refXeno = config["XenoSeq"]
 anXeno = config["XenoGtf"]
-
-
+txXeno = config["XenoTx"]
 
 
 # Prep output with rule all
 rule all:
 	input:
-		expand(RESULTS+"bam/{sample}.hg.stat.tsv", sample=SAMPLES),
-		expand(RESULTS+"bam/{sample}.xn.stat.tsv", sample=SAMPLES),
-		        expand(RESULTS + "counts/{sample}.{species}.featureCounts.txt", sample=SAMPLES, species=["hg", "xn"])
+		expand(RESULTS+"bam/{sample}.{species}.stat.tsv", sample=SAMPLES, species = SPECIES),
+		expand(RESULTS + "counts/{sample}.{species}.featureCounts.txt", sample = SAMPLES, species = SPECIES),
+		expand(RESULTS+"flair/{sample}.{species}.output",sample = SAMPLES, species = SPECIES)
 
 
-# Start mapping with minimap
-rule mapHuman:
+rule MapGeneric:
 	input:
 		reads = lambda wildcards: config["samples"][wildcards.sample]
 	output:
-		bam = RESULTS+"bam/{sample}.hg.bam"
-
+		bam = RESULTS+"bam/{sample}.{species}.bam"
 	threads:
 		config["threads"]
 	params:
-		ref = refHuman
+		ref = lambda wildcards: refHuman if wildcards.species == SPECIES[0] else refXeno
 
 	shell:"""
         minimap2 -t {threads} -ax splice -Y {params.ref} {input.reads} | \
@@ -46,33 +43,14 @@ rule mapHuman:
         samtools sort -@ {threads} -o {output.bam};
 	"""	
 
-# Start mapping with minimap
-rule mapXeno:
-	input:
-		reads = lambda wildcards: config["samples"][wildcards.sample]
-	output:
-		bam = RESULTS + "bam/{sample}.xn.bam",
-	threads:
-		config["threads"]
-	params:
-		ref = refXeno
-
-	shell:"""
-
-        minimap2 -t {threads} -ax splice -Y {params.ref} {input.reads} | \
-        samtools view -bS - | \
-        samtools sort -@ {threads} -o {output.bam};
-
-	"""
 
 # Flagstat Rule (with separate outputs for hg and xn)
 rule flagstat:
     input:
-        bam = [RESULTS + "bam/{sample}.hg.bam", RESULTS + "bam/{sample}.xn.bam"]
+        bam = [RESULTS + "bam/{sample}.{species}.bam", RESULTS + "bam/{sample}.{species}.bam"]
     output:
-        stat = [RESULTS + "bam/{sample}.hg.stat.tsv", RESULTS + "bam/{sample}.xn.stat.tsv"]
+        stat = [RESULTS + "bam/{sample}.{species}.stat.tsv", RESULTS + "bam/{sample}.{species}.stat.tsv"]
     shell:"""
-
         samtools flagstat {input.bam[0]} -@ {threads} > {output.stat[0]};
         samtools flagstat {input.bam[1]} -@ {threads} > {output.stat[1]};
 
@@ -83,7 +61,7 @@ rule featureCounts:
     	# Dynamically determine the BAM file
         bam = lambda wildcards: RESULTS + "bam/{sample}.{species}.bam",
         # Select annotation based on species
-        annotation = lambda wildcards: anHuman if wildcards.species == "hg" else anXeno  
+        annotation = lambda wildcards: anHuman if wildcards.species == SPECIES[0] else anXeno  
 
     output:
         counts = RESULTS + "counts/{sample}.{species}.featureCounts.txt"
@@ -94,4 +72,21 @@ rule featureCounts:
         featureCounts  -L -a {input.annotation} -g 'gene_name' -p -t exon -T {threads} {input.bam} -o {output.counts}
     """
 
+
+rule MapFlair:
+	input:
+		reads = lambda wildcards: config["samples"][wildcards.sample]
+	output:
+		out = RESULTS+"flair/{sample}.{species}.output"
+
+	params:
+		an = lambda wildcards: anHuman if wildcards.species == SPECIES[0] else anXeno,
+		ref = lambda wildcards: refHuman if wildcards.species == SPECIES[0] else refXeno
+	conda:
+		"flair"
+	threads:
+		config["threads"]
+	shell:"""
+		flair 123 --threads {threads} -r {input.reads} -g {params.ref} -f {params.an} -o {output.out}
+	"""
 
