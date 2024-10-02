@@ -22,16 +22,20 @@ txXeno = config["XenoTx"]
 # Prep output with rule all
 rule all:
 	input:
-		expand(RESULTS+"bam/{sample}.{species}.stat.tsv", sample=SAMPLES, species = SPECIES),
-		expand(RESULTS + "counts/{sample}.{species}.featureCounts.txt", sample = SAMPLES, species = SPECIES),
-		expand(RESULTS+"flair/{sample}.{species}.output",sample = SAMPLES, species = SPECIES)
+		expand(RESULTS+"bam/genomic/{sample}.{species}.stat.tsv", sample=SAMPLES, species = SPECIES),
+		expand(RESULTS+"bam/tx/{sample}.{species}.stat.tsv", sample=SAMPLES, species = SPECIES),
+		RESULTS+"counts/quant.tsv"
+
+
+		# expand(RESULTS + "counts/{sample}.{species}.featureCounts.txt", sample = SAMPLES, species = SPECIES),
+		# expand(RESULTS+"flair/{sample}.{species}", sample = SAMPLES, species = SPECIES)
 
 
 rule MapGeneric:
 	input:
 		reads = lambda wildcards: config["samples"][wildcards.sample]
 	output:
-		bam = RESULTS+"bam/{sample}.{species}.bam"
+		bam = RESULTS+"bam/genomic/{sample}.{species}.bam"
 	threads:
 		config["threads"]
 	params:
@@ -41,7 +45,24 @@ rule MapGeneric:
         minimap2 -t {threads} -ax splice -Y {params.ref} {input.reads} | \
         samtools view -bS - | \
         samtools sort -@ {threads} -o {output.bam};
-	"""	
+	"""
+
+rule MapGenericTx:
+	input:
+		reads = lambda wildcards: config["samples"][wildcards.sample]
+	output:
+		bam = RESULTS+"bam/tx/{sample}.{species}.bam"
+	threads:
+		config["threads"]
+	params:
+		ref = lambda wildcards: txHuman if wildcards.species == SPECIES[0] else txXeno
+
+	shell:"""
+        minimap2 -t {threads} -ax map-ont -uf -Y {params.ref} {input.reads} | \
+        samtools view -bS - | \
+        samtools sort -@ {threads} -o {output.bam};
+	"""
+
 
 
 # Flagstat Rule (with separate outputs for hg and xn)
@@ -55,6 +76,39 @@ rule flagstat:
         samtools flagstat {input.bam[1]} -@ {threads} > {output.stat[1]};
 
 	"""
+
+rule salmonQuant:
+	input:
+		bam = RESULTS+"bam/tx/{sample}.{species}.bam",
+		trp = lambda wildcards: txHuman if wildcards.species == SPECIES[0] else txXeno
+
+
+	output:
+		trp_quant = RESULTS+"counts/{sample}_{species}/quant.sf"
+
+	threads:
+		config["threads"]
+	params:
+		outDir = RESULTS+"counts/{sample}_{species}/"
+	conda:
+		"salmon"
+	shell:
+		"salmon quant --noErrorModel -p {threads} -l U -t {input.trp} -a {input.bam} -o {params.outDir}"
+
+
+exp = config["expiriment"]
+
+rule salmonMerge:
+	input:
+		dirs = expand(RESULTS+"counts/{sample}_{species}/", sample=SAMPLES, species = SPECIES)
+	output:
+		mFs = RESULTS+"counts/quant.tsv"
+	conda:
+		"salmon"
+	shell:"""
+		salmon quantmerge --quants {input.dirs} --output {output}
+	"""
+
 
 rule featureCounts:
     input:
@@ -73,12 +127,13 @@ rule featureCounts:
     """
 
 
+
+# Currently not working - bettert to stick with featureCount for now
 rule MapFlair:
 	input:
 		reads = lambda wildcards: config["samples"][wildcards.sample]
 	output:
-		out = RESULTS+"flair/{sample}.{species}.output"
-
+		out = RESULTS+"flair/{sample}.{species}/"
 	params:
 		an = lambda wildcards: anHuman if wildcards.species == SPECIES[0] else anXeno,
 		ref = lambda wildcards: refHuman if wildcards.species == SPECIES[0] else refXeno
@@ -87,6 +142,7 @@ rule MapFlair:
 	threads:
 		config["threads"]
 	shell:"""
-		flair 123 --threads {threads} -r {input.reads} -g {params.ref} -f {params.an} -o {output.out}
+
+		flair align --threads {threads} -g {params.ref} -r {input.reads} --output {output.out}
 	"""
 
