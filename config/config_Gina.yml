@@ -1,0 +1,31 @@
+### VARIABLES ###
+expiriment: "GN_XENO_V1"
+results: "/Users/chris/Work/Projects/Collab_Gina/analysis/"
+threads: 10
+
+# Human should go first. Pathogen or xeno second.
+species: ["hs","mm"]
+
+
+### INPUTS ###
+# Provide paths to references
+# First reference
+# Human hg38 primary assembly
+hg38Seq: "/Users/chris/Documents/src/hg38/sequence/GRCh38.primary_assembly.genome.fa.gz"
+hg38Gtf: "/Users/chris/Documents/src/hg38/annotation/gencode.v46.basic.annotation.gtf"
+hg38Tx: "/Users/chris/Documents/src/hg38/transcriptome/gencode.v46.transcripts.fa"
+
+# Xeno or meta reference
+XenoSeq: "/Users/chris/Documents/src/mm35/fa/genome/GRCm39.primary_assembly.genome.fa.gz"
+XenoGtf: "/Users/chris/Documents/src/mm35/gtf/gencode.vM35.basic.annotation.gtf"
+XenoTx : "/Users/chris/Documents/src/mm35/fa/transcriptome/gencode.vM35.transcripts.fa"
+
+# Sequencing samples
+samples:
+ S1_3h: "/Users/chris/Work/Projects/Collab_Gina/data/Xeno_S1.fq.gz"
+ S2_3h: "/Users/chris/Work/Projects/Collab_Gina/data/Xeno_S2.fq.gz"
+ S3_5h: "/Users/chris/Work/Projects/Collab_Gina/data/Xeno_S3.fq.gz"
+ S4_5h: "/Users/chris/Work/Projects/Collab_Gina/data/Xeno_S4.fq.gz"
+
+
+ # Nur Zeitpunkt drei, je mensch und maus isoliert, pathway analyse

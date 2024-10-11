@@ -24,12 +24,8 @@ rule all:
 	input:
 		expand(RESULTS+"bam/genomic/{sample}.{species}.stat.tsv", sample=SAMPLES, species = SPECIES),
 		expand(RESULTS+"bam/tx/{sample}.{species}.stat.tsv", sample=SAMPLES, species = SPECIES),
+		expand(RESULTS+"counts/{sample}_{species}/quant.sf", sample=SAMPLES, species = SPECIES),
 		RESULTS+"counts/quant.tsv"
-
-
-		# expand(RESULTS + "counts/{sample}.{species}.featureCounts.txt", sample = SAMPLES, species = SPECIES),
-		# expand(RESULTS+"flair/{sample}.{species}", sample = SAMPLES, species = SPECIES)
-
 
 rule MapGeneric:
 	input:
@@ -84,16 +80,15 @@ rule salmonQuant:
 
 
 	output:
-		trp_quant = RESULTS+"counts/{sample}_{species}/quant.sf"
+		trp_quant = RESULTS+"counts/{sample}_{species}/quant.sf",
+		trp_dir = directory(RESULTS+"counts/{sample}_{species}/")
 
 	threads:
 		config["threads"]
-	params:
-		outDir = RESULTS+"counts/{sample}_{species}/"
 	conda:
 		"salmon"
 	shell:
-		"salmon quant --noErrorModel -p {threads} -l U -t {input.trp} -a {input.bam} -o {params.outDir}"
+		"salmon quant --noErrorModel -p {threads} -l U -t {input.trp} -a {input.bam} -o {output.trp_dir}"
 
 
 exp = config["expiriment"]
