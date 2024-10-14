@@ -16,7 +16,7 @@ txHuman = config["hg38Tx"]
 # Get reference of Xeno or Meta organism
 refXeno = config["XenoSeq"]
 anXeno = config["XenoGtf"]
-txXeno = config["XenoTx"]
+txXeno = config["XenoTx"] 
 
 
 # Prep output with rule all
@@ -25,7 +25,8 @@ rule all:
 		expand(RESULTS+"bam/genomic/{sample}.{species}.stat.tsv", sample=SAMPLES, species = SPECIES),
 		expand(RESULTS+"bam/tx/{sample}.{species}.stat.tsv", sample=SAMPLES, species = SPECIES),
 		expand(RESULTS+"counts/{sample}_{species}/quant.sf", sample=SAMPLES, species = SPECIES),
-		RESULTS+"counts/quant.tsv"
+		RESULTS+"counts/tx/quant.tsv",
+		#RESULTS+"counts/gene/quant.tsv"
 
 rule MapGeneric:
 	input:
@@ -97,12 +98,24 @@ rule salmonMerge:
 	input:
 		dirs = expand(RESULTS+"counts/{sample}_{species}/", sample=SAMPLES, species = SPECIES)
 	output:
-		mFs = RESULTS+"counts/quant.tsv"
+		tx = RESULTS+"counts/tx/quant.tsv",
 	conda:
 		"salmon"
 	shell:"""
-		salmon quantmerge --quants {input.dirs} --output {output}
+		salmon quantmerge --quants {input.dirs} --output {output.tx};
 	"""
+
+# rule salmonMergeGene:
+# 	input:
+# 		dirs = expand(RESULTS+"counts/{sample}_{species}/", sample=SAMPLES, species = SPECIES)
+# 	output:
+# 		mFs = RESULTS+"counts/gene/quant.tsv"
+# 	conda:
+# 		"salmon"
+# 	shell:"""
+# 		salmon quantmerge --genes --quants {input.dirs} --output {output}
+# 	"""
+
 
 
 rule featureCounts:
