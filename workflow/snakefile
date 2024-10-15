@@ -18,6 +18,8 @@ refXeno = config["XenoSeq"]
 anXeno = config["XenoGtf"]
 txXeno = config["XenoTx"] 
 
+# Benchmarking code yet to be integrated
+# for i in $(ls *.bam);do echo $i; samtools view -F 4 $i | awk '{print $1}' > ${i%.bam}.mapped.reads.txt; sort -u ${i%.bam}.mapped.reads.txt -o ${i%.bam}.mapped.reads.txt;done
 
 # Prep output with rule all
 rule all:
