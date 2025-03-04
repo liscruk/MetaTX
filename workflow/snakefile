@@ -14,7 +14,10 @@ anHuman = config["hg38Gtf"]
 txHuman = config["hg38Tx"]
 
 # Get reference of Xeno or Meta organism
+# Fasta Sequence
 refXeno = config["XenoSeq"]
+
+# Annotation GTF
 anXeno = config["XenoGtf"]
 txXeno = config["XenoTx"] 
 
@@ -28,7 +31,6 @@ rule all:
 		expand(RESULTS+"bam/tx/{sample}.{species}.stat.tsv", sample=SAMPLES, species = SPECIES),
 		expand(RESULTS+"counts/{sample}_{species}/quant.sf", sample=SAMPLES, species = SPECIES),
 		RESULTS+"counts/tx/quant.tsv",
-		#RESULTS+"counts/gene/quant.tsv"
 
 rule MapGeneric:
 	input:
