@@ -26,11 +26,8 @@ txXeno = config["XenoTx"]
 # Prep output with rule all
 rule all:
 	input:
-		expand(RESULTS+"bam/tx/{sample}.bam",sample = SAMPLES),
-		# expand(RESULTS + "bam/genomic/{sample}."+SPECIES[0]+".tsv", sample=SAMPLES)
-		# expand(RESULTS+"counts/{sample}_{species}/quant.sf", sample=SAMPLES, species = SPECIES),
-		# RESULTS+"counts/tx/quant.tsv",
-
+		# expand(RESULTS+"counts/{sample}/quant.sf",sample=SAMPLES)
+		RESULTS+"counts/tx/quant.tsv",
 
 rule makeRef:
 	input:
@@ -59,7 +56,7 @@ rule makeRef:
 
 	shell:"""
 		cat {input.hr} {input.xr} > {output.rHyb};
-		cat {input.hx} {input.xa} > {output.txHyb}
+		cat {input.hx} {input.xx} > {output.txHyb}
 		grep -v '^#' {input.hx} > {output.anHyb};
 		grep -v '^#' {input.xa} >> {output.anHyb}
 
@@ -67,7 +64,8 @@ rule makeRef:
 
 rule Map:
 	input:
-		reads = lambda wildcards: config["samples"][wildcards.sample]
+		reads = lambda wildcards: config["samples"][wildcards.sample],
+		ref = RESULTS + "refs/Hybrd_transcriptome." + REFNAME + ".fa"
 	output:
 		bam = RESULTS+"bam/tx/{sample}.bam"
 	threads:
@@ -94,11 +92,10 @@ rule flagstat:
 rule salmonQuant:
 	input:
 		bam = RESULTS+"bam/tx/{sample}.bam",
-		trp = lambda wildcards: txHuman if wildcards.species == SPECIES[0] else txXeno
+		trp = RESULTS + "refs/Hybrd_transcriptome." + REFNAME + ".fa"
 	output:
-		trp_quant = RESULTS+"counts/{sample}_{species}/quant.sf",
-		trp_dir = directory(RESULTS+"counts/{sample}_{species}/")
-
+		trp_quant = RESULTS+"counts/{sample}/quant.sf",
+		trp_dir = directory(RESULTS+"counts/{sample}/")
 	threads:
 		config["threads"]
 	conda:
@@ -106,11 +103,9 @@ rule salmonQuant:
 	shell:
 		"salmon quant --noErrorModel -p {threads} -l U -t {input.trp} -a {input.bam} -o {output.trp_dir}"
 
-exp = config["expiriment"]
-
 rule salmonMerge:
 	input:
-		dirs = expand(RESULTS+"counts/{sample}_{species}/", sample=SAMPLES, species = SPECIES)
+		dirs = expand(RESULTS+"counts/{sample}/", sample=SAMPLES, species = SPECIES)
 	output:
 		tx = RESULTS+"counts/tx/quant.tsv",
 	conda:

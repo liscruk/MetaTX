@@ -1,9 +1,9 @@
 ### VARIABLES ###
 expiriment: "JB_Meta"
-results: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/analysis/"
+results: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/analysis/dev/"
 threads: 10
 
-# Human should go first. Pathogen or xeno second.
+# Host should go first. Pathogen or xeno second.
 species: ["hs","af"]
 
 
@@ -12,20 +12,20 @@ species: ["hs","af"]
 # First reference
 # Human hg38 primary assembly
 hg38Seq: "/Users/chris/Documents/src/hg38/sequence/primary/GRCh38.primary_assembly.genome.fa"
-hg38Tx: "/Users/chris/Documents/src/hg38/transcriptome/gencode.v46.transcripts.fa"
-hg38Gtf: "/Users/chris/Documents/src/hg38/annotation/gencode.v46.basic.annotation.gtf"
+hg38Tx: "/Users/chris/Documents/src/hg38/transcriptome/gencode.v47.transcripts.fasta"
+hg38Gtf: "/Users/chris/Documents/src/hg38/comprehensive/gencode.v47.annotation.gtf"
 
 
 # Xeno or meta reference
 XenoSeq: "/Users/chris/Documents/src/fungus/FungiDB-68_AfumigatusAf293_Genome.fasta"
 XenoTx : "/Users/chris/Documents/src/fungus/FungiDB-68_AfumigatusAf293_AnnotatedTranscripts.fasta"
-XenoGtf: "/Users/chris/Documents/src/fungus/FungiDB-68_AfumigatusAf293.gff "
+XenoGtf: "/Users/chris/Documents/src/fungus/FungiDB-68_AfumigatusAf293.gtf"
 
 
 # Sequencing samples
 samples:
- gfp_pos: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/gfp_pos.fq.gz"
+ # gfp_pos: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/gfp_pos.fq.gz"
  K57: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/K57_6h.fq.gz"
  K41: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/K41_2024_2.fq.gz"
- K85: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/K85_6h_ATCC.fq.gz"
- K86: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/K86_6h_ATCC.fq.gz"
+ # K85: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/K85_6h_ATCC.fq.gz"
+ # K86: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/K86_6h_ATCC.fq.gz"
