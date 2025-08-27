@@ -7,6 +7,7 @@ import re
 RESULTS = config["results"]
 SAMPLES = config["samples"]
 SPECIES = config["species"]
+REFNAME = SPECIES[0]+"."+SPECIES[1]
 
 # Get reference of human (if human is involved)
 refHuman = config["hg38Seq"]
@@ -16,8 +17,6 @@ txHuman = config["hg38Tx"]
 # Get reference of Xeno or Meta organism
 # Fasta Sequence
 refXeno = config["XenoSeq"]
-
-# Annotation GTF
 anXeno = config["XenoGtf"]
 txXeno = config["XenoTx"] 
 
@@ -27,63 +26,75 @@ txXeno = config["XenoTx"]
 # Prep output with rule all
 rule all:
 	input:
-		expand(RESULTS+"bam/genomic/{sample}.{species}.stat.tsv", sample=SAMPLES, species = SPECIES),
-		expand(RESULTS+"bam/tx/{sample}.{species}.stat.tsv", sample=SAMPLES, species = SPECIES),
-		expand(RESULTS+"counts/{sample}_{species}/quant.sf", sample=SAMPLES, species = SPECIES),
-		RESULTS+"counts/tx/quant.tsv",
+		expand(RESULTS+"bam/tx/{sample}.bam",sample = SAMPLES),
+		# expand(RESULTS + "bam/genomic/{sample}."+SPECIES[0]+".tsv", sample=SAMPLES)
+		# expand(RESULTS+"counts/{sample}_{species}/quant.sf", sample=SAMPLES, species = SPECIES),
+		# RESULTS+"counts/tx/quant.tsv",
 
-rule MapGeneric:
+
+rule makeRef:
+	input:
+		# Host reference fasta
+		hr = refHuman,
+
+		# Host reference annotation gtf
+		ha = anHuman,
+
+		# Host reference transcriptome fasta
+		hx = txHuman,
+
+		# Xeno or pathogen model fasta
+		xr = refXeno,
+
+		# Xeno or pathogen gtf NOT gff3
+		xa = anXeno,
+
+		# Xeno or pathogen transcripts fasta
+		xx = txXeno
+
+	output:
+		rHyb = RESULTS + "refs/Hybrid_genome." + REFNAME + ".fa",
+		anHyb = RESULTS + "refs/Hybrid_annotation." + REFNAME + ".gtf",
+		txHyb = RESULTS + "refs/Hybrd_transcriptome." + REFNAME + ".fa"
+
+	shell:"""
+		cat {input.hr} {input.xr} > {output.rHyb};
+		cat {input.hx} {input.xa} > {output.txHyb}
+		grep -v '^#' {input.hx} > {output.anHyb};
+		grep -v '^#' {input.xa} >> {output.anHyb}
+
+	"""
+
+rule Map:
 	input:
 		reads = lambda wildcards: config["samples"][wildcards.sample]
 	output:
-		bam = RESULTS+"bam/genomic/{sample}.{species}.bam"
+		bam = RESULTS+"bam/tx/{sample}.bam"
 	threads:
 		config["threads"]
 	params:
-		ref = lambda wildcards: refHuman if wildcards.species == SPECIES[0] else refXeno
+		ref = RESULTS + "refs/Hybrd_transcriptome." + REFNAME + ".fa"
 
 	shell:"""
-        minimap2 -t {threads} -ax splice -Y {params.ref} {input.reads} | \
-        samtools view -bS - | \
-        samtools sort -@ {threads} -o {output.bam};
+		minimap2 -t {threads} -ax map-ont -uf -Y {params.ref} {input.reads} | \
+		samtools view -bS - | \
+		samtools sort -@ {threads} -o {output.bam};
 	"""
-
-rule MapGenericTx:
-	input:
-		reads = lambda wildcards: config["samples"][wildcards.sample]
-	output:
-		bam = RESULTS+"bam/tx/{sample}.{species}.bam"
-	threads:
-		config["threads"]
-	params:
-		ref = lambda wildcards: txHuman if wildcards.species == SPECIES[0] else txXeno
-
-	shell:"""
-        minimap2 -t {threads} -ax map-ont -uf -Y {params.ref} {input.reads} | \
-        samtools view -bS - | \
-        samtools sort -@ {threads} -o {output.bam};
-	"""
-
-
 
 # Flagstat Rule (with separate outputs for hg and xn)
 rule flagstat:
-    input:
-        bam = [RESULTS + "bam/{sample}.{species}.bam", RESULTS + "bam/{sample}.{species}.bam"]
-    output:
-        stat = [RESULTS + "bam/{sample}.{species}.stat.tsv", RESULTS + "bam/{sample}.{species}.stat.tsv"]
-    shell:"""
-        samtools flagstat {input.bam[0]} -@ {threads} > {output.stat[0]};
-        samtools flagstat {input.bam[1]} -@ {threads} > {output.stat[1]};
-
+	input:
+		bam = RESULTS+"bam/tx/{sample}.bam"
+	output:
+		stat = RESULTS+"bam/tx/{sample}.txt" 
+	shell:"""
+		samtools flagstat {input.bam} -@ {threads} > {output.stat};
 	"""
-
+### Generation quantifcation by salmon for seperate mapping
 rule salmonQuant:
 	input:
-		bam = RESULTS+"bam/tx/{sample}.{species}.bam",
+		bam = RESULTS+"bam/tx/{sample}.bam",
 		trp = lambda wildcards: txHuman if wildcards.species == SPECIES[0] else txXeno
-
-
 	output:
 		trp_quant = RESULTS+"counts/{sample}_{species}/quant.sf",
 		trp_dir = directory(RESULTS+"counts/{sample}_{species}/")
@@ -94,7 +105,6 @@ rule salmonQuant:
 		"salmon"
 	shell:
 		"salmon quant --noErrorModel -p {threads} -l U -t {input.trp} -a {input.bam} -o {output.trp_dir}"
-
 
 exp = config["expiriment"]
 
@@ -109,34 +119,21 @@ rule salmonMerge:
 		salmon quantmerge --quants {input.dirs} --output {output.tx};
 	"""
 
-# rule salmonMergeGene:
-# 	input:
-# 		dirs = expand(RESULTS+"counts/{sample}_{species}/", sample=SAMPLES, species = SPECIES)
-# 	output:
-# 		mFs = RESULTS+"counts/gene/quant.tsv"
-# 	conda:
-# 		"salmon"
-# 	shell:"""
-# 		salmon quantmerge --genes --quants {input.dirs} --output {output}
-# 	"""
-
-
-
 rule featureCounts:
-    input:
-    	# Dynamically determine the BAM file
-        bam = lambda wildcards: RESULTS + "bam/{sample}.{species}.bam",
-        # Select annotation based on species
-        annotation = lambda wildcards: anHuman if wildcards.species == SPECIES[0] else anXeno  
+	input:
+		# Dynamically determine the BAM file
+		bam = lambda wildcards: RESULTS + "bam/{sample}.{species}.bam",
+		# Select annotation based on species
+		annotation = lambda wildcards: anHuman if wildcards.species == SPECIES[0] else anXeno  
 
-    output:
-        counts = RESULTS + "counts/{sample}.{species}.featureCounts.txt"
+	output:
+		counts = RESULTS + "counts/{sample}.{species}.featureCounts.txt"
 
-    threads:
-        config["threads"]
-    shell:"""
-        featureCounts  -L -a {input.annotation} -g 'gene_name' -p -t exon -T {threads} {input.bam} -o {output.counts}
-    """
+	threads:
+		config["threads"]
+	shell:"""
+		featureCounts  -L -a {input.annotation} -g 'gene_name' -p -t exon -T {threads} {input.bam} -o {output.counts}
+	"""
 
 
 
