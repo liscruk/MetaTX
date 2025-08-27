@@ -22,3 +22,5 @@ _book
 .snakemake/metadata/L1VzZXJzL2NocmlzL1dvcmsvUHJvamVjdHMvQ29sbGFiX0dpbmEvYW5hbHlzaXMvYmFtL1MzXzVoLmhnLnN0YXQudHN2
 /.snakemake
 config/config_Johannes.yml
+.Rproj.user
+resources/Dev.R

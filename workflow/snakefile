@@ -15,20 +15,38 @@ anHuman = config["hg38Gtf"]
 txHuman = config["hg38Tx"]
 
 # Get reference of Xeno or Meta organism
-# Fasta Sequence
 refXeno = config["XenoSeq"]
 anXeno = config["XenoGtf"]
 txXeno = config["XenoTx"] 
 
-# Benchmarking code yet to be integrated
-# for i in $(ls *.bam);do echo $i; samtools view -F 4 $i | awk '{print $1}' > ${i%.bam}.mapped.reads.txt; sort -u ${i%.bam}.mapped.reads.txt -o ${i%.bam}.mapped.reads.txt;done
+
+# Define output list to which results will be appended
+output = list()
+
+if config["mode"].lower() == "canonical":
+	output.append(RESULTS+"counts/tx/quant.tsv")
+	output.append(
+		collect(RESULTS+"bam/tx/{sample}.txt",sample = SAMPLES))
+
+if config["mode"].lower() == "novel":
+	output.append(RESULTS + "refs/Hybrid_genome." + REFNAME + ".fa")
+	include:"../resources/novelTranscripts.smk"
+
+if config["mode"].lower() == "both":
+	output.append(RESULTS+"counts/tx/quant.tsv")
+	output.append(RESULTS + "refs/Hybrid_genome." + REFNAME + ".fa")
+	include:"../resources/novelTranscripts.smk"
+
+
+
 
 # Prep output with rule all
 rule all:
 	input:
-		# expand(RESULTS+"counts/{sample}/quant.sf",sample=SAMPLES)
-		RESULTS+"counts/tx/quant.tsv",
+		output
 
+### Rule will be called no matter since it is required by all options.
+### The ressources required are minor since it is basically just concatenation.
 rule makeRef:
 	input:
 		# Host reference fasta
@@ -53,6 +71,8 @@ rule makeRef:
 		rHyb = RESULTS + "refs/Hybrid_genome." + REFNAME + ".fa",
 		anHyb = RESULTS + "refs/Hybrid_annotation." + REFNAME + ".gtf",
 		txHyb = RESULTS + "refs/Hybrd_transcriptome." + REFNAME + ".fa"
+	conda:
+		"MetaTx"
 
 	shell:"""
 		cat {input.hr} {input.xr} > {output.rHyb};
@@ -61,7 +81,8 @@ rule makeRef:
 		grep -v '^#' {input.xa} >> {output.anHyb}
 
 	"""
-
+### Canonical workflow perform competetive hybrid mapping on a hybrid reference generated per run.
+### If you stick to the model it might make sense to keep the reference stable. 
 rule Map:
 	input:
 		reads = lambda wildcards: config["samples"][wildcards.sample],
@@ -72,6 +93,8 @@ rule Map:
 		config["threads"]
 	params:
 		ref = RESULTS + "refs/Hybrd_transcriptome." + REFNAME + ".fa"
+	conda:
+		"MetaTx"
 
 	shell:"""
 		minimap2 -t {threads} -ax map-ont -uf -Y {params.ref} {input.reads} | \
@@ -79,12 +102,15 @@ rule Map:
 		samtools sort -@ {threads} -o {output.bam};
 	"""
 
-# Flagstat Rule (with separate outputs for hg and xn)
+### Simple mapping statistics gathering. We'd like to have good map rates.
 rule flagstat:
 	input:
 		bam = RESULTS+"bam/tx/{sample}.bam"
 	output:
-		stat = RESULTS+"bam/tx/{sample}.txt" 
+		stat = RESULTS+"bam/tx/{sample}.txt"
+	conda:
+		"MetaTx"
+	
 	shell:"""
 		samtools flagstat {input.bam} -@ {threads} > {output.stat};
 	"""
@@ -102,7 +128,7 @@ rule salmonQuant:
 		"salmon"
 	shell:
 		"salmon quant --noErrorModel -p {threads} -l U -t {input.trp} -a {input.bam} -o {output.trp_dir}"
-
+### Merge tpms
 rule salmonMerge:
 	input:
 		dirs = expand(RESULTS+"counts/{sample}/", sample=SAMPLES, species = SPECIES)
@@ -113,40 +139,3 @@ rule salmonMerge:
 	shell:"""
 		salmon quantmerge --quants {input.dirs} --output {output.tx};
 	"""
-
-rule featureCounts:
-	input:
-		# Dynamically determine the BAM file
-		bam = lambda wildcards: RESULTS + "bam/{sample}.{species}.bam",
-		# Select annotation based on species
-		annotation = lambda wildcards: anHuman if wildcards.species == SPECIES[0] else anXeno  
-
-	output:
-		counts = RESULTS + "counts/{sample}.{species}.featureCounts.txt"
-
-	threads:
-		config["threads"]
-	shell:"""
-		featureCounts  -L -a {input.annotation} -g 'gene_name' -p -t exon -T {threads} {input.bam} -o {output.counts}
-	"""
-
-
-
-# Currently not working - bettert to stick with featureCount for now
-rule MapFlair:
-	input:
-		reads = lambda wildcards: config["samples"][wildcards.sample]
-	output:
-		out = RESULTS+"flair/{sample}.{species}/"
-	params:
-		an = lambda wildcards: anHuman if wildcards.species == SPECIES[0] else anXeno,
-		ref = lambda wildcards: refHuman if wildcards.species == SPECIES[0] else refXeno
-	conda:
-		"flair"
-	threads:
-		config["threads"]
-	shell:"""
-
-		flair align --threads {threads} -g {params.ref} -r {input.reads} --output {output.out}
-	"""
-

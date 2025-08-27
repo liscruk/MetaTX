@@ -1,10 +1,16 @@
 ### VARIABLES ###
 expiriment: "JB_Meta"
-results: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/analysis/dev/"
+results: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/competetive_mapping/"
 threads: 10
 
 # Host should go first. Pathogen or xeno second.
 species: ["hs","af"]
+
+# Define run mode - Options:
+# Canonical [Default] - Will create a hybrid transcrimptome assembly, map and quantify
+# Novel - Will run novel isoform discovery using flair
+# Both  - Will provide both prior modes
+mode: "Both"
 
 
 ### INPUTS ###
@@ -24,8 +30,8 @@ XenoGtf: "/Users/chris/Documents/src/fungus/FungiDB-68_AfumigatusAf293.gtf"
 
 # Sequencing samples
 samples:
- # gfp_pos: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/gfp_pos.fq.gz"
- K57: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/K57_6h.fq.gz"
- K41: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/K41_2024_2.fq.gz"
+ gfp_pos: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/gfp_pos.fq.gz"
+ # K57: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/K57_6h.fq.gz"
+ # K41: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/K41_2024_2.fq.gz"
  # K85: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/K85_6h_ATCC.fq.gz"
  # K86: "/Users/chris/Work/Projects/Collab_Johannes/Metatranscriptome_Aspergillus/data/fq/K86_6h_ATCC.fq.gz"
