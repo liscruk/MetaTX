@@ -10,7 +10,7 @@ species: ["hs","af"]
 # Canonical [Default] - Will create a hybrid transcrimptome assembly, map and quantify
 # Novel - Will run novel isoform discovery using flair
 # Both  - Will provide both prior modes
-mode: "Both"
+mode: "Canonical"
 
 
 ### INPUTS ###

@@ -10,7 +10,7 @@ rule minimap2splice:
 	conda:
 		"minimap"
 	shell:
-		"minimap2 -t {threads} -ax splice -k '14' -u 'f'  {input.index} {input.reads} | samtools sort -@ 20 | samtools view -hbS -@ 20 > {output}"
+		"minimap2 -t {threads} -ax splice -s 80 -G 200k -secondary=no  {input.index} {input.reads} | samtools sort -@ 20 | samtools view -hbS -@ 20 > {output}"
 
 ### Perform mapping statistics for genomic mapping
 rule flagstat:
@@ -22,4 +22,17 @@ rule flagstat:
 		"MetaTx"
 	shell:"""
 		samtools flagstat {input.bam} -@ {threads} > {output.stat};
+	"""
+
+rule runFlair:
+	input:
+		bam = RESULTS+"bam/gn/{sample}.bam"
+	output:
+		nx = RESULTS+"flair/"
+	conda:
+		"flair"
+	threads:
+		config["threads"]
+	shell:"""
+		flair transcriptome
 	"""

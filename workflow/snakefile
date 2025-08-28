@@ -44,7 +44,6 @@ if config["mode"].lower() == "both":
 rule all:
 	input:
 		output
-
 ### Rule will be called no matter since it is required by all options.
 ### The ressources required are minor since it is basically just concatenation.
 rule makeRef:
@@ -101,7 +100,6 @@ rule Map:
 		samtools view -bS - | \
 		samtools sort -@ {threads} -o {output.bam};
 	"""
-
 ### Simple mapping statistics gathering. We'd like to have good map rates.
 rule flagstat:
 	input:
@@ -139,3 +137,14 @@ rule salmonMerge:
 	shell:"""
 		salmon quantmerge --quants {input.dirs} --output {output.tx};
 	"""
+
+# rule salmonMergeGene:
+# 	input:
+# 		dirs = expand(RESULTS+"counts/{sample}_{species}/", sample=SAMPLES, species = SPECIES)
+# 	output:
+# 		mFs = RESULTS+"counts/gene/quant.tsv"
+# 	conda:
+# 		"salmon"
+# 	shell:"""
+# 		salmon quantmerge --genes --quants {input.dirs} --output {output}
+# 	"""
