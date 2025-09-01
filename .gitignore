@@ -24,3 +24,4 @@ _book
 config/config_Johannes.yml
 .Rproj.user
 resources/Dev.R
+resources/.Rhistory

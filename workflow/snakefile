@@ -38,12 +38,11 @@ if config["mode"].lower() == "both":
 	include:"../resources/novelTranscripts.smk"
 
 
-
-
 # Prep output with rule all
 rule all:
 	input:
 		output
+
 ### Rule will be called no matter since it is required by all options.
 ### The ressources required are minor since it is basically just concatenation.
 rule makeRef:
