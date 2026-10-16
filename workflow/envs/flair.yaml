@@ -1,0 +1,10 @@
+name: metatx-flair
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - flair>=2.0
+  - minimap2=2.28
+  - samtools=1.21
+  - bedtools

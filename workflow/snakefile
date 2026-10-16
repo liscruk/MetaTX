@@ -70,7 +70,7 @@ rule makeRef:
 		anHyb = RESULTS + "refs/Hybrid_annotation." + REFNAME + ".gtf",
 		txHyb = RESULTS + "refs/Hybrd_transcriptome." + REFNAME + ".fa"
 	conda:
-		"MetaTx"
+		"envs/mapping.yaml"
 
 	shell:"""
 		cat {input.hr} {input.xr} > {output.rHyb};
@@ -92,10 +92,10 @@ rule Map:
 	params:
 		ref = RESULTS + "refs/Hybrd_transcriptome." + REFNAME + ".fa"
 	conda:
-		"MetaTx"
+		"envs/mapping.yaml"
 
 	shell:"""
-		minimap2 -t {threads} -ax map-ont -uf -Y {params.ref} {input.reads} | \
+		minimap2 -t {threads} -ax map-ont -Y {params.ref} {input.reads} | \
 		samtools view -bS - | \
 		samtools sort -@ {threads} -o {output.bam};
 	"""
@@ -106,7 +106,7 @@ rule flagstat:
 	output:
 		stat = RESULTS+"bam/tx/{sample}.txt"
 	conda:
-		"MetaTx"
+		"envs/mapping.yaml"
 	
 	shell:"""
 		samtools flagstat {input.bam} -@ {threads} > {output.stat};
@@ -122,7 +122,7 @@ rule salmonQuant:
 	threads:
 		config["threads"]
 	conda:
-		"salmon"
+		"envs/salmon.yaml"
 	shell:
 		"salmon quant --noErrorModel -p {threads} -l U -t {input.trp} -a {input.bam} -o {output.trp_dir}"
 ### Merge tpms
@@ -132,7 +132,7 @@ rule salmonMerge:
 	output:
 		tx = RESULTS+"counts/tx/quant.tsv",
 	conda:
-		"salmon"
+		"envs/salmon.yaml"
 	shell:"""
 		salmon quantmerge --quants {input.dirs} --output {output.tx};
 	"""

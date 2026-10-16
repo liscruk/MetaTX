@@ -1,0 +1,34 @@
+### Default config for np_metatx
+# Copy this file (e.g. config/config_<project>.yml) and adapt it.
+# Project configs are git-ignored; only this template is tracked.
+
+### VARIABLES ###
+experiment: "MY_EXPERIMENT"
+# Output directory (trailing slash required)
+results: "/path/to/analysis/"
+threads: 8
+
+# Host first, xeno/pathogen second. Used to name the hybrid references.
+species: ["hs", "mm"]
+
+# Run mode:
+#   Canonical - hybrid transcriptome, competitive mapping, salmon quantification
+#   Novel     - spliced genomic mapping + FLAIR isoform discovery
+#   Both      - both of the above
+mode: "Canonical"
+
+### INPUTS ###
+# Host reference (genome fasta, GTF, transcriptome fasta)
+hg38Seq: "/path/to/GRCh38.primary_assembly.genome.fa"
+hg38Gtf: "/path/to/gencode.vXX.annotation.gtf"
+hg38Tx:  "/path/to/gencode.vXX.transcripts.fa"
+
+# Xeno / pathogen reference (GTF, not GFF3)
+XenoSeq: "/path/to/xeno.genome.fa"
+XenoGtf: "/path/to/xeno.annotation.gtf"
+XenoTx:  "/path/to/xeno.transcripts.fa"
+
+# Samples: name -> fastq(.gz)
+samples:
+  sample1: "/path/to/sample1.fq.gz"
+  sample2: "/path/to/sample2.fq.gz"

@@ -1,27 +1,21 @@
-# Node rules:
-## Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
-.grunt
-
-## Dependency directory
-## Commenting this out is preferred by some people, see
-## https://docs.npmjs.com/misc/faq#should-i-check-my-node_modules-folder-into-git
-node_modules
-
-# Book build output
-_book
-
-# eBook build output
-*.epub
-*.mobi
-*.pdf
+# macOS
 .DS_Store
+**/.DS_Store
+
+# Snakemake
+.snakemake/
+logs/
 *.log
-/.snakemake/metadata
-/.snakemake/metadata
-.snakemake/metadata/L1VzZXJzL2NocmlzL1dvcmsvUHJvamVjdHMvQ29sbGFiX0dpbmEvYW5hbHlzaXMvYmFtL1M0XzVoLmhnLmJhbQ==
-.snakemake/metadata/L1VzZXJzL2NocmlzL1dvcmsvUHJvamVjdHMvQ29sbGFiX0dpbmEvYW5hbHlzaXMvYmFtL1MzXzVoLmhnLnN0YXQudHN2
-/.snakemake
-config/config_Johannes.yml
-.Rproj.user
+
+# Run outputs
+results/
+
+# Run configs: only the template is tracked
+config/*
+!config/config.default.yml
+
+# R / RStudio
+.Rhistory
+.RData
+.Rproj.user/
 resources/Dev.R
-resources/.Rhistory

@@ -8,7 +8,7 @@ rule minimap2splice:
 	threads:
 		config["threads"]
 	conda:
-		"minimap"
+		"../workflow/envs/mapping.yaml"
 	shell:"""
 
 		minimap2 -t {threads} -ax splice -s 80 -G 200k -secondary=no  {input.index} {input.reads} \
@@ -24,7 +24,7 @@ rule flagstat:
 	output:
 		stat = RESULTS+"bam/gn/{sample}.txt"
 	conda:
-		"MetaTx"
+		"../workflow/envs/mapping.yaml"
 	shell:"""
 		samtools flagstat {input.bam} -@ {threads} > {output.stat};
 
@@ -42,7 +42,7 @@ rule runFlair:
 		dummyOut = RESULTS+"flair/{sample}.isoforms.bed"
 
 	conda:
-		"flair"
+		"../workflow/envs/flair.yaml"
 	threads:
 		config["threads"]
 	shell:"""
