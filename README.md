@@ -17,9 +17,10 @@ so species assignment follows from the transcript of origin.
 
 ```
 config/config.default.yml      template config (copy and adapt; project configs are git-ignored)
-workflow/snakefile             main workflow (canonical mode)
+workflow/snakefile             entry point: config, mode switch, rule all, hybrid reference (makeRef)
+workflow/rules/canonical.smk   canonical branch: transcriptome mapping + salmon quantification
+workflow/rules/novel.smk       novel branch: spliced genomic mapping + FLAIR (work in progress)
 workflow/envs/*.yaml           conda environments (mapping, salmon, flair)
-resources/novelTranscripts.smk novel-isoform rules (included in Novel/Both mode)
 resources/sequentialMapping.py experimental sequential host→xeno mapping (not wired in)
 ```
 

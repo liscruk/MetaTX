@@ -1,3 +1,7 @@
+### Novel branch: spliced genomic mapping against the hybrid genome + FLAIR isoform discovery
+
+NOVEL_TARGETS = [RESULTS + "refs/Hybrid_genome." + REFNAME + ".fa"]
+
 ### Perform spliced alignment against hybrid reference genome
 rule minimap2splice:
 	input:
@@ -8,7 +12,7 @@ rule minimap2splice:
 	threads:
 		config["threads"]
 	conda:
-		"../workflow/envs/mapping.yaml"
+		"../envs/mapping.yaml"
 	shell:"""
 
 		minimap2 -t {threads} -ax splice -s 80 -G 200k -secondary=no  {input.index} {input.reads} \
@@ -18,13 +22,13 @@ rule minimap2splice:
 	"""
 
 ### Perform mapping statistics for genomic mapping
-rule flagstat:
+rule flagstatGenomic:
 	input:
 		bam = RESULTS+"bam/gn/{sample}.bam"
 	output:
 		stat = RESULTS+"bam/gn/{sample}.txt"
 	conda:
-		"../workflow/envs/mapping.yaml"
+		"../envs/mapping.yaml"
 	shell:"""
 		samtools flagstat {input.bam} -@ {threads} > {output.stat};
 
@@ -42,7 +46,7 @@ rule runFlair:
 		dummyOut = RESULTS+"flair/{sample}.isoforms.bed"
 
 	conda:
-		"../workflow/envs/flair.yaml"
+		"../envs/flair.yaml"
 	threads:
 		config["threads"]
 	shell:"""
