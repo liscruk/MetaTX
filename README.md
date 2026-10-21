@@ -13,6 +13,10 @@ so species assignment follows from the transcript of origin.
 | `Novel` | Spliced genomic mapping (`minimap2 -ax splice`) per sample → pool samples → `flair transcriptome` (one isoform set for the experiment) → `flair quantify` per sample |
 | `Both` | Both of the above |
 
+Every mode also writes a **species composition** report per mapping type (`tx` = transcriptome, `gn` = genome):
+reads per species (by primary alignment), cross-species ambiguous reads (secondary hits in the other species),
+unmapped reads, the ratio between the species and, for `tx`, the salmon (EM) based split.
+
 ## Layout
 
 ```
@@ -20,7 +24,9 @@ config/config.default.yml      template config (copy and adapt; project configs 
 workflow/snakefile             entry point: config, mode switch, rule all, hybrid reference (makeRef)
 workflow/rules/canonical.smk   canonical branch: transcriptome mapping + salmon quantification
 workflow/rules/novel.smk       novel branch: spliced genomic mapping + FLAIR isoform discovery/quantification
-workflow/envs/*.yaml           conda environments (mapping, salmon, flair)
+workflow/rules/species.smk     reads per species + species ratio, table and plots
+workflow/scripts/              helper scripts (species counting / summary plots)
+workflow/envs/*.yaml           conda environments (mapping, salmon, flair, species)
 resources/sequentialMapping.py experimental sequential host→xeno mapping (not wired in)
 ```
 
@@ -63,6 +69,12 @@ flair/merged.bam                       pooled alignments used for isoform discov
 flair/<hs.xx>.isoforms.{bed,gtf,fa}    FLAIR isoform set (annotated + novel)
 flair/<hs.xx>.quant.counts.tsv         isoform counts per sample
 flair/<hs.xx>.quant.tpm.tsv            isoform TPM per sample
+
+# Species composition (per mapping type: tx and/or gn)
+species/<tx|gn>/<sample>.counts.tsv           per-sample counts: total, unmapped, per species, ambiguous
+species/<tx|gn>/species_summary.tsv           all samples + percentages and <xeno>/<host> ratios
+                                              (primary, unique-only, and salmon for tx)
+species/<tx|gn>/species_composition.pdf/.png  read composition, reads per species, species ratio
 ```
 
 ## License

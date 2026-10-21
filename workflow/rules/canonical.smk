@@ -5,7 +5,7 @@ CANONICAL_TARGETS = [RESULTS+"counts/tx/numreads.tsv", RESULTS+"counts/tx/tpm.ts
 
 ### Canonical workflow perform competetive hybrid mapping on a hybrid reference generated per run.
 ### If you stick to the model it might make sense to keep the reference stable. 
-rule Map:
+rule mapping:
 	input:
 		reads = lambda wildcards: config["samples"][wildcards.sample],
 		ref = RESULTS + "refs/Hybrd_transcriptome." + REFNAME + ".fa"
@@ -22,7 +22,7 @@ rule Map:
 	# records with the same read name into one alignment group. -N 100 keeps all competing
 	# isoforms/orthologues as candidates (default -N 5 truncates them).
 	shell:"""
-		minimap2 -t {threads} -ax map-ont -N 100 {params.ref} {input.reads} | \
+		minimap2 -t {threads} -ax map-ont -N 100 --eqx -I 16G {params.ref} {input.reads} | \
 		samtools view -b -o {output.bam} -
 	"""
 ### Simple mapping statistics gathering. With -N 100, use the 'primary mapped' line for map rates.
@@ -53,6 +53,7 @@ rule salmonQuant:
 	# `salmon quant --help-alignment`); uses alignment errors/clipping instead of ignoring them.
 	shell:
 		"salmon quant --ont -p {threads} -l U -t {input.trp} -a {input.bam} -o {output.trp_dir}"
+
 ### Merge per-sample quantifications: estimated read counts (for DE) and TPM
 rule salmonMerge:
 	input:
@@ -67,13 +68,4 @@ rule salmonMerge:
 		salmon quantmerge --quants {input.dirs} --column tpm --output {output.tpm};
 	"""
 
-# rule salmonMergeGene:
-# 	input:
-# 		dirs = expand(RESULTS+"counts/{sample}_{species}/", sample=SAMPLES, species = SPECIES)
-# 	output:
-# 		mFs = RESULTS+"counts/gene/quant.tsv"
-# 	conda:
-# 		"salmon"
-# 	shell:"""
-# 		salmon quantmerge --genes --quants {input.dirs} --output {output}
-# 	"""
+

@@ -1,0 +1,10 @@
+name: metatx-species
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - samtools=1.21
+  - python=3.12
+  - pandas>=2.2
+  - matplotlib>=3.9

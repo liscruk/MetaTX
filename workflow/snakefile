@@ -39,6 +39,10 @@ if MODE in ("novel", "both"):
 	include: "rules/novel.smk"
 	output += NOVEL_TARGETS
 
+# Species composition (reads per species + ratio) for whichever branches run
+include: "rules/species.smk"
+output += SPECIES_TARGETS
+
 
 # Prep output with rule all
 rule all:
