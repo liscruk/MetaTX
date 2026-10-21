@@ -24,6 +24,10 @@ anXeno = config["XenoGtf"]
 txXeno = config["XenoTx"]
 
 
+# {sample} may only match sample names from the config
+wildcard_constraints:
+	sample = "|".join(re.escape(s) for s in SAMPLES)
+
 # Each branch defines its own target list (CANONICAL_TARGETS / NOVEL_TARGETS)
 output = list()
 
@@ -42,39 +46,43 @@ rule all:
 	input:
 		output
 
-### Rule will be called no matter since it is required by all options.
-### The ressources required are minor since it is basically just concatenation.
+### Builds the hybrid references used by both branches.
+### Inputs may be plain or gzipped. Genome contigs and GTF seqnames are prefixed with the
+### species tag (e.g. hs_chr1, mm_chr1) because GENCODE human and mouse share contig names.
+### Transcript IDs are left untouched (they are already species-specific).
 rule makeRef:
 	input:
 		# Host reference fasta
 		hr = refHuman,
-
 		# Host reference annotation gtf
 		ha = anHuman,
-
 		# Host reference transcriptome fasta
 		hx = txHuman,
-
-		# Xeno or pathogen model fasta
+		# Xeno or pathogen genome fasta
 		xr = refXeno,
-
 		# Xeno or pathogen gtf NOT gff3
 		xa = anXeno,
-
 		# Xeno or pathogen transcripts fasta
 		xx = txXeno
-
 	output:
 		rHyb = RESULTS + "refs/Hybrid_genome." + REFNAME + ".fa",
+		rFai = RESULTS + "refs/Hybrid_genome." + REFNAME + ".fa.fai",
 		anHyb = RESULTS + "refs/Hybrid_annotation." + REFNAME + ".gtf",
 		txHyb = RESULTS + "refs/Hybrd_transcriptome." + REFNAME + ".fa"
+	params:
+		hs = SPECIES[0],
+		xs = SPECIES[1]
 	conda:
 		"envs/mapping.yaml"
-
 	shell:"""
-		cat {input.hr} {input.xr} > {output.rHyb};
-		cat {input.hx} {input.xx} > {output.txHyb}
-		grep -v '^#' {input.hx} > {output.anHyb};
-		grep -v '^#' {input.xa} >> {output.anHyb}
+		dc() {{ case "$1" in *.gz) gzip -dc "$1" ;; *) cat "$1" ;; esac; }}
+		pfa() {{ awk -v p="$1_" '/^>/{{sub(/^>/, ">" p)}} 1'; }}
+		pgtf() {{ awk -v p="$1_" 'BEGIN{{FS=OFS="\t"}} !/^#/{{$1 = p $1; print}}'; }}
 
+		{{ dc {input.hr} | pfa {params.hs}; dc {input.xr} | pfa {params.xs}; }} > {output.rHyb}
+		samtools faidx {output.rHyb}
+
+		{{ dc {input.hx}; dc {input.xx}; }} > {output.txHyb}
+
+		{{ dc {input.ha} | pgtf {params.hs}; dc {input.xa} | pgtf {params.xs}; }} > {output.anHyb}
 	"""

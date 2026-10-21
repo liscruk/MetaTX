@@ -1,6 +1,6 @@
 ### Canonical branch: competitive mapping against the hybrid transcriptome + salmon quantification
 
-CANONICAL_TARGETS = [RESULTS+"counts/tx/quant.tsv"] + \
+CANONICAL_TARGETS = [RESULTS+"counts/tx/numreads.tsv", RESULTS+"counts/tx/tpm.tsv"] + \
 	expand(RESULTS+"bam/tx/{sample}.txt", sample = SAMPLES)
 
 ### Canonical workflow perform competetive hybrid mapping on a hybrid reference generated per run.
@@ -18,12 +18,14 @@ rule Map:
 	conda:
 		"../envs/mapping.yaml"
 
+	# Output must stay in minimap2 read order (NOT coordinate-sorted): salmon groups consecutive
+	# records with the same read name into one alignment group. -N 100 keeps all competing
+	# isoforms/orthologues as candidates (default -N 5 truncates them).
 	shell:"""
-		minimap2 -t {threads} -ax map-ont -Y {params.ref} {input.reads} | \
-		samtools view -bS - | \
-		samtools sort -@ {threads} -o {output.bam};
+		minimap2 -t {threads} -ax map-ont -N 100 {params.ref} {input.reads} | \
+		samtools view -b -o {output.bam} -
 	"""
-### Simple mapping statistics gathering. We'd like to have good map rates.
+### Simple mapping statistics gathering. With -N 100, use the 'primary mapped' line for map rates.
 rule flagstat:
 	input:
 		bam = RESULTS+"bam/tx/{sample}.bam"
@@ -33,7 +35,7 @@ rule flagstat:
 		"../envs/mapping.yaml"
 	
 	shell:"""
-		samtools flagstat {input.bam} -@ {threads} > {output.stat};
+		samtools flagstat {input.bam} > {output.stat};
 	"""
 ### Generation quantifcation by salmon for seperate mapping
 rule salmonQuant:
@@ -47,18 +49,22 @@ rule salmonQuant:
 		config["threads"]
 	conda:
 		"../envs/salmon.yaml"
+	# --ont: salmon's ONT alignment model (undocumented on readthedocs, listed in
+	# `salmon quant --help-alignment`); uses alignment errors/clipping instead of ignoring them.
 	shell:
-		"salmon quant --noErrorModel -p {threads} -l U -t {input.trp} -a {input.bam} -o {output.trp_dir}"
-### Merge tpms
+		"salmon quant --ont -p {threads} -l U -t {input.trp} -a {input.bam} -o {output.trp_dir}"
+### Merge per-sample quantifications: estimated read counts (for DE) and TPM
 rule salmonMerge:
 	input:
-		dirs = expand(RESULTS+"counts/{sample}/", sample=SAMPLES, species = SPECIES)
+		dirs = expand(RESULTS+"counts/{sample}/", sample=SAMPLES)
 	output:
-		tx = RESULTS+"counts/tx/quant.tsv",
+		counts = RESULTS+"counts/tx/numreads.tsv",
+		tpm = RESULTS+"counts/tx/tpm.tsv"
 	conda:
 		"../envs/salmon.yaml"
 	shell:"""
-		salmon quantmerge --quants {input.dirs} --output {output.tx};
+		salmon quantmerge --quants {input.dirs} --column numreads --output {output.counts};
+		salmon quantmerge --quants {input.dirs} --column tpm --output {output.tpm};
 	"""
 
 # rule salmonMergeGene:
